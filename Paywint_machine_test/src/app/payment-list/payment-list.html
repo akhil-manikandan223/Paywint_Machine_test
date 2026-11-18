@@ -1,0 +1,154 @@
+<div class="page-container">
+  <div class="header-wrapper">
+    <div class="page-title">
+      <h2>Payment List</h2>
+      <span class="subtitle">Manage and search recent transactions</span>
+    </div>
+    <div class="search-filter-row">
+      <select [formControl]="statusControl" aria-label="Filter by status">
+        <option value="all">All Statuses</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+        <option value="refunded">Refunded</option>
+      </select>
+
+      <input type="text" placeholder="Search by ref or customer..." [formControl]="searchControl" />
+    </div>
+  </div>
+
+  <div class="card-wrapper">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading payments...</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Customer</th>
+              <th class="text-right">Amount</th>
+              <th>Status</th>
+              <th>Method</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of paginatedPayments(); track payment.reference) {
+              <tr>
+                <td>
+                  <button type="button" class="ref-link" (click)="openDetails(payment)">
+                    {{ payment.reference }}
+                  </button>
+                </td>
+                <td class="font-medium">{{ payment.customerName }}</td>
+                <td class="text-right font-medium">{{ payment.amount | currency }}</td>
+                <td>
+                  <span class="status-badge" [class]="payment.status?.toLowerCase()">
+                    {{ payment.status }}
+                  </span>
+                </td>
+                <td class="uppercase-text">{{ payment.method }}</td>
+                <td class="text-muted">{{ payment.createdAt | date: 'mediumDate' }}</td>
+              </tr>
+            }
+
+            <!-- Add this Side Panel Drawer at the very bottom of payment-list.html -->
+            @if (selectedPayment(); as payment) {
+              <div class="drawer-backdrop" (click)="closeDetails()"></div>
+
+              <aside class="side-drawer">
+                <div class="drawer-header">
+                  <div>
+                    <span class="drawer-label">Payment Details</span>
+                    <h3>{{ payment.reference }}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    class="close-btn"
+                    (click)="closeDetails()"
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                </div>
+
+                <div class="drawer-body">
+                  <div class="amount-banner">
+                    <span class="amount-value">{{ payment.amount | currency }}</span>
+                    <span class="status-badge" [class]="payment.status?.toLowerCase()">
+                      {{ payment.status }}
+                    </span>
+                  </div>
+
+                  <div class="detail-group">
+                    <div class="detail-item">
+                      <span class="label">Customer Name</span>
+                      <span class="value">{{ payment.customerName }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="label">Customer Email</span>
+                      <span class="value">{{ payment.customerEmail }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="label">Payment Method</span>
+                      <span class="value uppercase-text">{{ payment.method }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="label">Fee</span>
+                      <span class="value uppercase-text">{{ payment.fee | currency }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="label">Net Amount</span>
+                      <span class="value uppercase-text">{{ (payment.amount - (payment.fee || 0)) | currency }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="label">Created Date</span>
+                      <span class="value">{{ payment.createdAt | date: 'medium' }}</span>
+                    </div>
+
+                    <!-- Optional: Renders any extra fields if your JSON has them (like email, notes, ID) -->
+                    @if (payment.email) {
+                      <div class="detail-item">
+                        <span class="label">Customer Email</span>
+                        <span class="value">{{ payment.email }}</span>
+                      </div>
+                    }
+                    @if (payment.description) {
+                      <div class="detail-item">
+                        <span class="label">Description</span>
+                        <span class="value">{{ payment.description }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="drawer-footer">
+                  <button type="button" class="btn-secondary" (click)="closeDetails()">
+                    Close
+                  </button>
+                </div>
+              </aside>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-controls">
+        <span class="page-info">
+          Page <strong>{{ currentPage() }}</strong> of <strong>{{ totalPages() }}</strong> ({{
+            filteredPayments().length
+          }}
+          results)
+        </span>
+        <div class="page-buttons">
+          <button (click)="prevPage()" [disabled]="currentPage() === 1">Previous</button>
+          <button (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
